@@ -28,10 +28,14 @@ void add_history(char* unused) {}
 #endif
 
 long eval_op(long x, char* op, long y) {
+
 	if (strcmp(op, "+") == 0) { return x + y; }
+	if (strcmp(op, "-") == 0) { printf("s"); return 0 - x; }
 	if (strcmp(op, "-") == 0) { return x - y; }
 	if (strcmp(op, "*") == 0) { return x * y; }
 	if (strcmp(op, "/") == 0) { return x / y; }
+	if (strcmp(op, "%") == 0) { return x % y; }
+	if (strcmp(op, "^") == 0) { return x ^ y; }
 	return 0;
 }
 
@@ -50,7 +54,32 @@ long eval (mpc_ast_t* t) {
 		i++;
 	}
 	
+	if (i == 3) { return -x; }
 	return x;
+}
+
+long count_leaves (mpc_ast_t* t) {
+	if ((t->children_num == 0) && (strstr(t->tag, "number"))) { return 1; }
+	if (t->children_num >= 1) {
+		int total = 0;
+		for (int i = 0; i < t->children_num; i++) {
+			total = total + count_leaves(t->children[i]);
+		}
+		return total;
+	}
+	return 0;
+}
+
+long count_branches (mpc_ast_t* t) {
+	if ((t->children_num == 0) && (strstr(t->tag, "operator"))) { return 1; }
+	if (t->children_num >= 1) {
+		int total = 0;
+		for (int i = 0; i < t->children_num; i++) {
+			total = total + count_branches(t->children[i]);
+		}
+		return total;
+	}
+	return 0;
 }
 
 int main(int argc, char** argv) {
@@ -85,6 +114,10 @@ int main(int argc, char** argv) {
 		if (mpc_parse("<stdin>", input, Lispy, &r)) {
 		  long result = eval(r.output);
 		  printf("%li\n", result);
+		  long result2 = count_leaves(r.output);
+		  printf("%li\n", result2);
+		  long result3 = count_branches(r.output);
+		  printf("%li\n", result3);
 		  mpc_ast_delete(r.output);
 		} else {
 		  /* Otherwise Print the Error */
